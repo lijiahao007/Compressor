@@ -1,6 +1,7 @@
 package LZ77CompressorTest;
 
 import CompressStrategies.imp.LZ77CompressStrategy;
+import CompressStrategies.imp.LZ77CompressStrategy2;
 import Compressor.FileCompressor;
 import FileHelper.FileHelper.FileHelper;
 import MyException.*;
@@ -18,7 +19,7 @@ public class LZ77CompressorTest1 {
         String decompressFileName = "src/main/resources/lena512(lz77).bmp";
 
         FileCompressor fileCompressor = new FileCompressor();
-        fileCompressor.setCompressStrategy(new LZ77CompressStrategy());
+        fileCompressor.setCompressStrategy(new LZ77CompressStrategy2());
 
         fileCompressor.compress(fileName, compressFileName);
         fileCompressor.decompress(compressFileName, decompressFileName);

@@ -2,6 +2,7 @@ package LZ77CompressorTest;
 
 import CompressStrategies.imp.DifferenceCompressStrategy;
 import CompressStrategies.imp.LZ77CompressStrategy;
+import CompressStrategies.imp.LZ77CompressStrategy2;
 import Compressor.BmpCompressor;
 import MyException.*;
 
@@ -17,7 +18,7 @@ public class LZ77CompressorTest2 {
 
         BmpCompressor bmpCompressor =new BmpCompressor();
         DifferenceCompressStrategy strategy = new DifferenceCompressStrategy();
-        strategy.setCompressStrategy(new LZ77CompressStrategy());
+        strategy.setCompressStrategy(new LZ77CompressStrategy2());
         bmpCompressor.setCompressStrategy(strategy);
 
         bmpCompressor.compress(fileName, compressFileName);

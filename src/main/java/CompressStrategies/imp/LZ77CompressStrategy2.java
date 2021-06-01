@@ -1,33 +1,31 @@
 package CompressStrategies.imp;
 
 import CompressStrategies.CompressStrategy;
+import MyException.BitArrayListOutOfBoundException;
 import MyException.ParaIllegalException;
+import Tool.BitArrayList;
 import Tool.ByteArrayConvertor;
-import lombok.Data;
 
-import java.nio.channels.ByteChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-@Data
-public class LZ77CompressStrategy extends CompressStrategy {
-    // 每个单元使用两个字节来存储。
-
+public class LZ77CompressStrategy2 extends CompressStrategy {
     LinkedList<Byte> searchArea;
     LinkedList<Byte> lookAheadArea;
-    int searchAreaMaxSize = 255;
-    int lookAheadAreaMaxSize = 255;
+    int searchAreaMaxSize = 31; // 占用11位
+    int lookAheadAreaMaxSize = searchAreaMaxSize; // 占用11位
+    int bit = (int)(Math.log(searchAreaMaxSize + 1) / Math.log(2));
 
     int offset = 0;
     int length = 0;
     int nextByte = 0;
 
-    public byte[] compress(byte data[]) {
+    public byte[] compress(byte data[]) throws ParaIllegalException {
         int index = 0; // index 永远指向下一个准备写入lookAheadArea的字节，或者指向data.length
 
-        ArrayList<Byte> res = new ArrayList<>();
+        BitArrayList bitArrayList = new BitArrayList(); // 存放结果
         searchArea = new LinkedList<>();
         lookAheadArea = new LinkedList<>();
 
@@ -39,9 +37,9 @@ public class LZ77CompressStrategy extends CompressStrategy {
         // 找lookAhaedArea 在 searchArea中匹配的最长字节串。
         while (lookAheadArea.size() > 0) {
             match(searchArea, lookAheadArea);
-            res.add((byte)length);
+            bitArrayList.add(length, bit);
             if (length == 0) { // 未匹配,直接将该元素加入到结果中
-                res.add((byte) nextByte);
+                bitArrayList.add((byte)nextByte);
                 // 搜索区加上待搜索区第一个元素，（需要先判断是否超过searchArea的最大长度, 如果是则将第一个元素删掉。）
                 searchArea.offer(lookAheadArea.getFirst());
                 if (searchArea.size() > searchAreaMaxSize) {
@@ -59,7 +57,7 @@ public class LZ77CompressStrategy extends CompressStrategy {
                 }
 
             } else { // 匹配
-                res.add((byte) offset);
+                bitArrayList.add(offset, bit);
 
                 // 假设匹配长度为length
                 // 搜索区需要将这待搜索区前length个元素加入。（需要判断是否会超过SearchArea的最大长度）
@@ -82,7 +80,11 @@ public class LZ77CompressStrategy extends CompressStrategy {
                 }
             }
         }
-        return ByteArrayConvertor.arrayListToByteArray(res);
+
+        getCompressInfo().addIntInfo("bit", bit); // 长度和偏移需要使用的位数
+        getCompressInfo().addIntInfo("bitArrayLength", bitArrayList.getBitSize()); // 真实的位大小
+
+        return ByteArrayConvertor.arrayListToByteArray(bitArrayList.getBitArrayList());
     }
 
     public void match(LinkedList<Byte> first, LinkedList<Byte> second) { // second中以第一个字节为头的字节链表，在first中匹配的最长字节链表
@@ -114,15 +116,24 @@ public class LZ77CompressStrategy extends CompressStrategy {
         }
     }
 
-    public byte[] decompress(byte data[]) {
+    public byte[] decompress(byte data[]) throws ParaIllegalException, BitArrayListOutOfBoundException {
+
+        this.bit = getCompressInfo().getIntInfo("bit");
+        int dataBitLength = getCompressInfo().getIntInfo("bitArrayLength");
+        BitArrayList bitArrayList = new BitArrayList(data);
+        bitArrayList.setTailBit(dataBitLength - 1);
+
         searchArea = new LinkedList<>();
         ArrayList<Byte> res = new ArrayList<>();
 
-        int index = 0; // index指向下一个元素或者 等于data.length
-        while (index < data.length) {
-            int length = data[index++] & 0xff;
+        int index = 0; // index指向下一个元素的开始位数或者 等于data.length
+        while (index < dataBitLength) {
+            int length = (int)bitArrayList.at(index, bit);
+            index += bit;
             if (length == 0) {
-                byte nextByte = data[index++];
+                byte nextByte = (byte) bitArrayList.at(index, 8);
+                index += 8;
+
                 // 将该元素写入加过中
                 res.add(nextByte);
                 // 将该元素写入到搜索区中 (需要判断搜索区是否超过最大限定长度255,是则将搜索区头删除)
@@ -131,7 +142,8 @@ public class LZ77CompressStrategy extends CompressStrategy {
                     searchArea.remove(0);
                 }
             } else { // searchArea中有匹配的内容
-                int offset = data[index++] & 0xff;
+                int offset = (int) bitArrayList.at(index, bit);
+                index += bit;
 
                 // 将offset后length个元素加入到加结果中
                 Iterator<Byte> iterator = searchArea.listIterator(offset);

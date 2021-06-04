@@ -37,7 +37,7 @@ public class BmpCompressor {
         file.delete(); // 如果存在则先删除后创建
         file.createNewFile();
 
-        BmpFileHelper bmpFileHelper =  BmpFileHelper.readBmpFile(fileName); // 读bmp文件数据
+        BmpFileHelper bmpFileHelper = BmpFileHelper.readBmpFile(fileName); // 读bmp文件数据
         byte[] compressData = null;   // 压缩后的数据
 
         int bitType = bmpFileHelper.getBitmapinfoheader().getBiBitCount();
@@ -51,12 +51,12 @@ public class BmpCompressor {
         bitMapData.setPixelArrayList(compressData);
         BmpFileHelper.writeHeader(compressFileName, bmpFileHelper); // 头文件直接写进压缩文件
         compressStrategy.getCompressInfo().writeCompressInfo(compressFileName); // 压缩信息写进压缩文件
-        BitMapData.writeBitMapData(compressFileName,bitMapData); // 压缩后得图像数据存入文件
+        BitMapData.writeBitMapData(compressFileName, bitMapData); // 压缩后得图像数据存入文件
         return true;
     }
 
     private byte[] compress8BitBmpData(BmpFileHelper bmpFileHelper) throws ParaIllegalException { // 此时bmpFilehelper存有bmp文件的所有信息
-        BitMapData bitMapData =  bmpFileHelper.getBitMapData();
+        BitMapData bitMapData = bmpFileHelper.getBitMapData();
         byte[] pixels = bitMapData.getPixelByteArray();
         // 注意这里的图像数据是总左下到右上的，我们需要将其处理为S型的排列
         int height = bmpFileHelper.getBitmapinfoheader().getBiHeight();
@@ -70,7 +70,7 @@ public class BmpCompressor {
             while (begin < end) {
                 int tmp = pixels[begin] & 0xff;
                 pixels[begin] = pixels[end];
-                pixels[end] = (byte)tmp;
+                pixels[end] = (byte) tmp;
                 begin++;
                 end--;
             }
@@ -78,7 +78,7 @@ public class BmpCompressor {
         return compressStrategy.compress(pixels);
     }
 
-    private BmpFileHelper decompress8BitBmpData(BmpFileHelper bmpFileHelper, byte[] decompressData ) {
+    private BmpFileHelper decompress8BitBmpData(BmpFileHelper bmpFileHelper, byte[] decompressData) {
         // 此时的bmpFileHelper存有除bmp像素信息之外的其他信息，decompressData为图像信息，该函数需要将图像信息存放到合适的位置
         // 方法返回处理好的BmpFileHelper
 
@@ -92,7 +92,7 @@ public class BmpCompressor {
             while (begin < end) {
                 int tmp = decompressData[begin] & 0xff;
                 decompressData[begin] = decompressData[end];
-                decompressData[end] = (byte)tmp;
+                decompressData[end] = (byte) tmp;
                 begin++;
                 end--;
             }
@@ -107,7 +107,7 @@ public class BmpCompressor {
         // 此时bmpFilehelper存有bmp文件的所有信息
         // 对于24位彩图，没有调色板，图像数据是以RGBA 4个字节的形式存储。
         RgbQuadInfo rgbQuadInfo = bmpFileHelper.getRgbQuadInfo(); // rgb信息存储
-        ArrayList<RGBQUAD> rgbaList =  rgbQuadInfo.getRgbquadArrayList(); //
+        ArrayList<RGBQUAD> rgbaList = rgbQuadInfo.getRgbquadArrayList(); //
         // 将信息全部存到一个字节数组中。
         byte[] rgbByteArray = new byte[rgbaList.size() * 4];
         int index = 0;
@@ -148,10 +148,10 @@ public class BmpCompressor {
         BmpFileHelper bmpFileHeader = BmpFileHelper.readHeader(fileName); // 读头文件
         offset += bmpFileHeader.getSize();
 
-        compressStrategy.readCompressInfo(fileName,offset); // 读压缩信息
+        compressStrategy.readCompressInfo(fileName, offset); // 读压缩信息
         offset += compressStrategy.getCompressInfo().getOffset();
 
-        BitMapData bitMapData =  BitMapData.readBitMapData(fileName,offset); // 读压缩后的位图数据
+        BitMapData bitMapData = BitMapData.readBitMapData(fileName, offset); // 读压缩后的位图数据
         byte[] compressData = bitMapData.getPixelByteArray();
         byte[] decompressData = compressStrategy.decompress(compressData); // 解压
 

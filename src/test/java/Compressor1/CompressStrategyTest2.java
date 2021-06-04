@@ -1,4 +1,4 @@
-package Compressor;
+package Compressor1;
 
 import CompressStrategies.imp.DPCompressStrategy1;
 import MyException.BitArrayListOutOfBoundException;

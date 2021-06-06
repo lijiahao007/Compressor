@@ -1,5 +1,12 @@
+import Tool.ByteArrayConvertor;
+import org.junit.jupiter.api.Test;
+
+import java.io.Reader;
 import java.util.LinkedList;
-import java.util.Random;
+import java.util.Scanner;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 public class Application {
 
@@ -11,14 +18,9 @@ public class Application {
             linkedList.remove(0);
 
         }
-
-
-
-        // TODO: 2021/6/4  在这里添加编写和UI相关的应用程序
-
-
-
+    }
+    @Test
+    void run () {
 
     }
-
 }
